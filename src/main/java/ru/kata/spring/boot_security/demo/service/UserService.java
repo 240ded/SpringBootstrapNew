@@ -1,25 +1,36 @@
 package ru.kata.spring.boot_security.demo.service;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.kata.spring.boot_security.demo.configs.WebSecurityConfig;
 import ru.kata.spring.boot_security.demo.entity.User;
 import ru.kata.spring.boot_security.demo.entity.Role;
 import ru.kata.spring.boot_security.demo.repositories.UserRepository;
 
+import javax.transaction.Transactional;
 import java.util.*;
 
 @Service
 public class UserService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
         User user = userRepository.findByUsername(username);
 
         if (user == null) {
@@ -53,10 +64,10 @@ public class UserService implements UserDetailsService {
             Role userRole = new Role();
             userRole.setId(userRoleId);
 
-            user.setRoles(Collections.singleton(userRole));
+            user.setRoles(Collections.singletonList(userRole));
         }
 
-        String encodedPassword = "{bcrypt}" + WebSecurityConfig.bCryptPasswordEncoder().encode(user.getPassword());
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
         userRepository.save(user);
         return true;
@@ -76,7 +87,7 @@ public class UserService implements UserDetailsService {
         if (selectedRoleFromView.equals("2")) {
             selectedRoleAdmin(user);
         } else if (selectedRoleFromView.equals("1")) {
-            Set<Role> roles = user.getRoles();
+            List<Role> roles = user.getRoles();
             while (roles.size() != 1) {
                 roles.remove(roles.iterator().next());
             }
@@ -93,7 +104,7 @@ public class UserService implements UserDetailsService {
         Role userRole2 = new Role();
         userRole2.setId(2L);
 
-        Set<Role> roles = new HashSet<>();
+        List<Role> roles = new ArrayList<>();
         roles.add(userRole1);
         roles.add(userRole2);
 
