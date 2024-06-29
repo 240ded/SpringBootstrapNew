@@ -64,7 +64,7 @@ public class UserService implements UserDetailsService {
             Role userRole = new Role();
             userRole.setId(userRoleId);
 
-            user.setRoles(Collections.singletonList(userRole));
+            user.setRoles(Collections.singleton(userRole));
         }
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
@@ -87,7 +87,7 @@ public class UserService implements UserDetailsService {
         if (selectedRoleFromView.equals("2")) {
             selectedRoleAdmin(user);
         } else if (selectedRoleFromView.equals("1")) {
-            List<Role> roles = user.getRoles();
+            Set<Role> roles = user.getRoles();
             while (roles.size() != 1) {
                 roles.remove(roles.iterator().next());
             }
@@ -104,7 +104,7 @@ public class UserService implements UserDetailsService {
         Role userRole2 = new Role();
         userRole2.setId(2L);
 
-        List<Role> roles = new ArrayList<>();
+        Set<Role> roles = new HashSet<>();
         roles.add(userRole1);
         roles.add(userRole2);
 
